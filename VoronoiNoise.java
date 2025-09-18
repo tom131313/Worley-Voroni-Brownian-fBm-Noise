@@ -1,29 +1,58 @@
 /*
- * Voroni/Worley noise with optional addition of fractional/fractl Brownian movement (fBm)
+ * Create a cellular "life" form or pattern using Voroni/Worley noise with optional
+ * addition of fractional/fractl Brownian movement (fBm) or blurring of the cell
  * 
  * Image files are made with the Worley noise and with and without the fBm nosie
  * 
- * A video file is made with an animation of the noise image with slight movement of the cell centers
+ * A video file is made with an animation of the noise image with slight movement of the cells
  * in each frame.
+ *
+ * Try these options and more:
+ * DistanceMethod.Exponential ClosestPoint.f1 invertImageGray = true useFBM = true
+ * DistanceMethod.Euclidean ClosestPoint.f1 invertImageGray = true useFBM = false
+ * DistanceMethod.Euclidean ClosestPoint.f1 invertImageGray = false useFBM = false
  */
 
+/*
 // AI comments below don't go with the code below but are of general help
-// Voronoi noise, also known as Worley noise, is a procedural noise function often used in computer graphics and procedural generation to create organic-looking textures and terrains. It works by dividing space into cells based on the distance to a set of "seed" points. The value at any given point is typically determined by the distance to the closest seed point, or a combination of distances to multiple seed points.
-// Here's a conceptual outline of how a Voronoi noise implementation in Java might work, along with key components you'd need:
+// Voronoi noise, also known as Worley noise, is a procedural noise function often used in computer
+graphics and procedural generation to create organic-looking textures and terrains. It works by
+dividing space into cells based on the distance to a set of "seed" points. The value at any given
+point is typically determined by the distance to the closest seed point, or a combination of
+distances to multiple seed points.
+// Here's a conceptual outline of how a Voronoi noise implementation in Java might work, along with
+key components you'd need:
 // 1. Seed Point Generation:
-// You need a way to generate a set of random seed points within a given area or grid. A Random object with a seed for reproducibility is a good choice.
-// These seed points can be represented by Point2D or a custom Vector2D class if you're working in 2D, or Point3D/Vector3D for 3D.
+// You need a way to generate a set of random seed points within a given area or grid. A Random
+object with a seed for reproducibility is a good choice.
+// These seed points can be represented by Point2D or a custom Vector2D class if you're working
+in 2D, or Point3D/Vector3D for 3D.
 // 2. Noise Calculation Function:
-// This function takes a coordinate (e.g., x, y) as input and returns the Voronoi noise value at that point.
-// Grid Optimization: To improve performance, especially for larger areas, you can divide the space into a grid. For any given input coordinate, you only need to consider the seed points in the current grid cell and its immediate neighbors (e.g., 3x3 cells in 2D). This avoids iterating through all seed points for every pixel.
-// Distance Calculation: For each seed point within the relevant grid cells, calculate the distance from the input coordinate to that seed point. Euclidean distance is common, but other distance metrics can be used for different visual effects.
-// Finding the Closest: Determine the minimum distance among all calculated distances. This minimum distance is often the basic Voronoi noise value.
+// This function takes a coordinate (e.g., x, y) as input and returns the Voronoi noise value at
+that point.
+// Grid Optimization: To improve performance, especially for larger areas, you can divide the space
+into a grid. For any given input coordinate, you only need to consider the seed points in the
+current grid cell and its immediate neighbors (e.g., 3x3 cells in 2D). This avoids iterating
+through all seed points for every pixel.
+// Distance Calculation: For each seed point within the relevant grid cells, calculate the distance
+from the input coordinate to that seed point. Euclidean distance is common, but other distance
+metrics can be used for different visual effects.
+// Finding the Closest: Determine the minimum distance among all calculated distances. This minimum
+distance is often the basic Voronoi noise value.
 // Optional Features:
-// Feature Points: You can store additional data with each seed point (e.g., a random value) and use that in the final noise calculation, instead of just the distance.
-// Multiple Features (F1, F2, etc.): Instead of just the closest seed, you can calculate the distance to the 2nd closest, 3rd closest, etc., and use combinations of these distances (e.g., F2 - F1) to create different patterns.
+// Feature Points: You can store additional data with each seed point (e.g., a random value) and use
+ that in the final noise calculation, instead of just the distance.
+// Multiple Features (F1, F2, etc.): Instead of just the closest seed, you can calculate the distance
+to the 2nd closest, 3rd closest, etc., and use combinations of these distances (e.g., F2 - F1) to create different patterns.
 // 3. Example Code Structure (Conceptual):
 
-// Note: The provided conceptual code is a simplified example. A full-fledged Voronoi noise implementation often involves more sophisticated grid management and potentially different distance functions or combinations of features to achieve various visual effects. Libraries like FastNoiseLite or JMonkeyEngine might offer pre-built noise functions, including Voronoi, if you are looking for a ready-to-use solution.
+// Note: The provided conceptual code is a simplified example. A full-fledged Voronoi noise
+implementation often involves more sophisticated grid management and potentially different distance
+functions or combinations of features to achieve various visual effects. Libraries like
+FastNoiseLite or JMonkeyEngine might offer pre-built noise functions, including Voronoi, if you
+are looking for a ready-to-use solution.
+*/
+
 package App;
 
 import java.util.Arrays;
@@ -46,14 +75,14 @@ public class VoronoiNoise {
 
     // select distance calculation method
     private static enum DistanceMethod {Euclidean, Manhattan, Exponential}
-    private static final DistanceMethod distanceMethod = DistanceMethod.Exponential;
+    private static final DistanceMethod distanceMethod = DistanceMethod.Euclidean;
     // select which points are used for distance calculation
     private static enum ClosestPoint {f1, f2, f3, f2_1, f3_2}
     private static final ClosestPoint ClosestPointfn = ClosestPoint.f1;
     // select if gray scale black to white is flipped white to black
     private static final boolean invertImageGray = true;
     // select if fBm is to be added to images
-    private static final boolean useFBM = true;
+    private static final boolean useFBM = false;
     // select size of image
     private static int imageWidth = 500;
     private static int imageHeight = 500;
@@ -94,6 +123,14 @@ public class VoronoiNoise {
         }
 
         allOnes.setTo(new Scalar(255)); // used for the XOR inversion of the image gray scale
+
+        HighGui.namedWindow("Voroni Noise");
+        if (useFBM)
+        {
+            HighGui.namedWindow("Voroni Noise + fBm");
+            HighGui.moveWindow("Voroni Noise + fBm", 80, 80);
+        }
+
         createRandomCellCenters();
         for (int frame = 1; frame <= videoLength; frame++) // run to video length
         {
@@ -113,19 +150,21 @@ public class VoronoiNoise {
 
             Imgcodecs.imwrite("VoroniNoise.jpg", image, writeParams); // save camera image
             HighGui.imshow("Voroni Noise", image);
-            outputVideo.write(image/*threeChannelMat*/);
+            outputVideo.write(image);
 
-            //Caution: if fBm image is displayed, it appears exactly over the Worley image and must be moved to reveal Worley
             if (useFBM)
             {
                 Core.normalize(image2, image2,0, 255, Core.NORM_MINMAX);
-                Imgcodecs.imwrite("voroniNoise+Brownian.jpg", image2, writeParams); // save camera image
+                Imgcodecs.imwrite("VoroniNoise+Brownian.jpg", image2, writeParams); // save camera image
                 HighGui.imshow("Voroni Noise + fBm", image2);                
             }
 
             HighGui.waitKey(10);
         }
+        HighGui.destroyAllWindows();
         outputVideo.release();
+        System.out.println("main ended");
+        System.exit(0); // needed to force termination
     }
 
     /**
@@ -160,10 +199,16 @@ public class VoronoiNoise {
     {
         for (int i = 0; i < image.rows(); i++)
         {
+            // update a complete row at a time for OpenCV Mat efficiency
             for (int j = 0; j < image.cols(); j++)
             {
                 var WorleyNoise = VoronoiNoise.noise((double)j, (double)i);
-                gray[j] = (byte)WorleyNoise; // Java double to byte conversion is tricky
+                 // Java double to byte cast conversion is tricky.
+                 // Drop fractional part of the double.
+                 // Clamp to Integer.MAX_VALUE or MIN_VALUE.
+                 // Make integer type.
+                 // Extract least significant byte of the integer value.
+                gray[j] = (byte)WorleyNoise;
                 if (useFBM)
                     {
                         var fBmNoise = fBm(j, i);
@@ -257,7 +302,7 @@ private static double fBm(int x, int y)
                 return minDistance[1] - minDistance[0];
             case f3_2:
                 return minDistance[2] - minDistance[1];
-            default:
+            default: // subtle junk - shouldn't be here if enum and switch cases match
                 return minDistance[0];
         }
     }
@@ -271,14 +316,14 @@ private static double fBm(int x, int y)
      */
     private static double getDistance(double xDist, double zDist) {
         switch(distanceMethod) {
-            case Euclidean:
-                return Math.sqrt(xDist * xDist + zDist * zDist); // Euclidean distance
-            case Manhattan:
-                return Math.abs(xDist) + Math.abs(zDist); // Manhattan distance L1 norm
-            case Exponential: // an unusual distance function whose origin is unknown
+            case Euclidean: // Euclidean distance
+                return Math.sqrt(xDist * xDist + zDist * zDist);
+            case Manhattan: // Manhattan distance L1 norm
+                return Math.abs(xDist) + Math.abs(zDist);
+            case Exponential: // an unusual distance function whose origin is unknown (an A.I. hallucination?)
                 return Math.pow(Math.E, Math.sqrt(xDist * xDist + zDist * zDist) / Math.sqrt(2.))/Math.E;
-            default:
-                return 1.0; // junk
+            default: // subtle junk - shouldn't be here if enum and switch cases match
+                return 1.0;
         }
     }
 }
