@@ -1,0 +1,13 @@
+Distance method Euclidean
+Closest point selection f1
+Invert gray image true
+Add fBm to image true
+Image width 500
+Image height 500
+Number of cell centers 50
+Number of video frames at 10 fps 30
+Video file Voronoi.mp4
+fBm octaves 8
+fBm persistence 0.5
+fBm scale 0.01
+Random seed 123
